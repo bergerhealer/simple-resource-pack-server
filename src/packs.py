@@ -2,6 +2,7 @@ from loguru import logger
 from models import PackMetadata, MinecraftVersionRange
 from typing import Optional, List
 from datetime import datetime, UTC
+from packaging.version import Version, InvalidVersion
 
 import uuid
 import os
@@ -87,7 +88,13 @@ class PackCache:
         self.by_slug[meta.slug] = meta
         if meta.main:
             self.main.append(meta)
-            self.main = sorted(self.main, key=lambda m: m.minecraft.minimum)
+
+            def sort_key(pack):
+              try:
+                return (1, Version(pack.minecraft.minimum))  # Valid version: sort later
+              except InvalidVersion:
+                return (0, pack.minecraft.minimum)  # Invalid version: sort first, alphabetically
+            self.main = sorted(self.main, key=sort_key)
 
         if save and not meta.is_temporary:
             pack_json_file = os.path.join(self.packs_dir, f"{meta.slug}.json")

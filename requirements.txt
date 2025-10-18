@@ -3,4 +3,5 @@ python-dotenv
 pyjwt
 pydantic
 loguru
+packaging
 gunicorn
