@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="current-pack-slug" content="{{ pack.slug }}">
+    <title>{{ pack.name }}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link
+      rel="preload"
+      as="image"
+      href="/static/images/background.jpg"
+    />
+    <script src="/static/main.js"></script>
+    {% if authenticated %}
+    <script src="/static/admin.js"></script>
+    {% endif %}
+  </head>
+  <body>
+    <div class="container">
+      <div class="header-row">
+        <h1 {% if authenticated %}ondblclick="makeTitleEditable(this)"{% endif %}>{{ pack.name }}</h1>
+        <div class="version-selector">
+          <div class="version-selector-row">
+            <label class="text-label" for="mc-version-range">Minecraft:</label>
+            <select
+              id="mc-version-range"
+              class="text-field{% if not pack.main %} deprecated-version-color{% endif %}"
+              name="mc-version-range"
+              onchange="location.href=this.value;"
+            >
+{% if not pack.main %}
+              <option
+                value="{{ url_for('pack_detail', slug=pack.slug) }}"
+                data-slug="{{ pack.slug }}"
+                data-tags="[Old]"
+                class="deprecated-version-color"
+                selected
+              >
+                {{ pack.minecraft.minimum }} – {{ pack.minecraft.maximum }} [Old]
+              </option>
+{% endif %}
+{% for main_pack in main_packs %}
+              <option value="{{ url_for('pack_detail', slug=main_pack.slug) }}" data-slug="{{ main_pack.slug }}" {% if main_pack.slug == pack.slug %}selected{% endif %}>
+                {{ main_pack.minecraft.minimum }} – {{ main_pack.minecraft.maximum }}
+              </option>
+{% endfor %}
+            </select>
+
+{% if authenticated %}
+            <button id="version-settings-button" title="Configure Version" onclick="togglePopupDialog('version-settings-popup')">
+              <span class="gear-icon">&#x2699;&#xFE0F;</span>
+            </button>
+{% endif %}
+          </div>
+{% if not pack.main %}
+          <div class="version-selector-row">
+            <span class="version-warning">This resource pack is outdated!</span>
+          </div>
+{% endif %}
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="left-column">
+          <label class="text-label" for="download-url">Download URL:</label>
+          <input
+            type="text"
+            class="text-field"
+            id="download-url"
+            readonly=""
+            value="{{ url_for('pack_detail', slug=pack.slug, _external=True) }}"
+            onclick="selectAllText(this)"
+          />
+
+          <label class="text-label" for="sha1">SHA-1 Hash:</label>
+          <input
+            type="text"
+            class="text-field"
+            id="sha1"
+            readonly=""
+            value="{{ pack.sha1 }}"
+            onclick="selectAllText(this)"
+          />
+        </div>
+      </div>
+
+      <div class="server-properties-row">
+        <label class="text-label" for="server-properties"
+          >Server Properties:</label
+        >
+        <textarea
+          id="server-properties"
+          class="code-block text-field"
+          readonly
+          rows="3"
+          onclick="selectAllText(this)"
+        >
+# Edit your server.properties file
+resource-pack={{ url_for('pack_detail', slug=pack.slug, _external=True) }}
+resource-pack-sha1={{ pack.sha1 }}</textarea
+        >
+      </div>
+
+      <div class="footer-row">
+        {% if pack.sha1 %}
+        <a id="download-button" class="footer-button"
+           href="{{ url_for('pack_detail_download', slug=pack.slug) }}" >Download ZIP File</a>
+        {% endif %}
+        {% if authenticated %}
+        <input id="upload-file-input" type="file" accept=".zip" onchange="uploadZipFile()" style="display: none;" />
+        <a id="upload-button" class="footer-button"
+           onclick="selectZipFile()">Upload New ZIP File</a>
+        {% endif %}
+        <p id="uploaded-at">
+          Updated
+          <time datetime="{{ pack.uploaded.isoformat() }}">...</time>
+        </p>
+      </div>
+    </div>
+
+    {% if authenticated %}
+    <!-- Authenticated Indicator -->
+    <div id="authenticated-indicator" class="authenticated-related-button">Authenticated</div>
+
+    <!-- Menu for configuring the version -->
+    <div id="version-settings-popup" onclick="closePopupOnOutsideClick(event)" class="popup-overlay popup-hidden">
+      <div class="popup-dialog">
+        <label for="edit-min-version" class="text-label" style="display: block; margin-bottom: 8px;">Minimum Version:</label>
+        <input id="edit-min-version"
+               class="version-input"
+               name="min-version"
+               value="{{ pack.minecraft.minimum }}"
+               onchange="updateVersion()"
+        />
+
+        <label for="edit-max-version" class="text-label" style="display: block; margin-bottom: 8px;">Maximum Version:</label>
+        <input id="edit-max-version"
+               class="version-input"
+               name="max-version"
+               value="{{ pack.minecraft.maximum }}"
+               onchange="updateVersion()"
+        />
+        <div class="button-row">
+          <button onclick="togglePopupDialog('version-settings-popup')">Close</button>
+          <button onclick="duplicatePack()">Duplicate</button>
+          {% if pack.main and main_packs|length > 1 %}
+          <button onclick="deletePack()">Delete</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <!-- Floating Manage Button -->
+    <button id="manage-button" class="authenticated-related-button" onclick="togglePopupDialog('admin-popup')">
+      Manage
+    </button>
+
+    <!-- Admin JWT Popup -->
+    <div id="admin-popup" onclick="closePopupOnOutsideClick(event)" class="popup-overlay popup-hidden">
+      <div class="popup-dialog">
+        <label for="jwt-token" class="text-label" style="display: block; margin-bottom: 8px;">Admin JWT Token:</label>
+        <input
+                id="jwt-token"
+                type="password"
+                name="token"
+                required
+                autocomplete="current-password"
+                placeholder="Enter JWT token"
+        />
+        <div class="button-row">
+          <button onclick="togglePopupDialog('admin-popup')">Close</button>
+          <button onclick="authenticateJwt()">Authenticate</button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </body>
+</html>

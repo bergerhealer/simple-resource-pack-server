@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Resource Packs</title></head>
+<body>
+<h1>Available Resource Packs</h1>
+<ul>
+{% for pack in packs %}
+  <li>
+    <a href="/p/{{ pack.slug }}">{{ pack.name }}</a><br>
+    Slug: {{ pack.slug }}<br>
+    Minecraft: {{ pack.minecraft.minimum }} – {{ pack.minecraft.maximum }}
+  </li>
+{% endfor %}
+</ul>
+</body>
+</html>
