@@ -3,6 +3,9 @@ packs/*.zip
 packs/*.json
 nginx_log/
 
+# Intellij
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
