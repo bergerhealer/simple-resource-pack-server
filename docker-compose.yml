@@ -1,6 +1,6 @@
 services:
   pack_server:
-    container_name: pack-server
+    container_name: "${CONTAINER_NAME:-pack-server}"
     image: pack_server:latest
     build:
       context: .
@@ -12,7 +12,7 @@ services:
         max-size: "50m"
         max-file: "20"
     ports:
-      - "127.0.0.1:5000:5000"
+      - "127.0.0.1:${BIND_PORT-5000}:5000"
     environment:
       JWT_SECRET: "${JWT_SECRET:-changeme}"
       DEV_MODE: "${DEV_MODE:-false}"
