@@ -3,6 +3,14 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="current-pack-slug" content="{{ pack.slug }}">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url_for('pack_detail', slug=pack.slug) }}">
+    <meta property="og:title" content="{{ pack.name }}">
+    <meta property="og:description" content="{{ pack.description | default('No Description', true) }}">
+    <meta property="og:image" content="{{ url_for('static_files', filename='images/pack.png') }}">
+
     <title>{{ pack.name }}</title>
     <link rel="stylesheet" href="/static/style.css" />
     <link
@@ -58,6 +66,15 @@
           </div>
 {% endif %}
         </div>
+      </div>
+
+      <!-- Pack Description -->
+      <div class="header-row">
+          <span class="description-text" {% if authenticated %}ondblclick="makeDescriptionEditable(this)"{% endif %}>
+              {% for line in (pack.description | default('No Description', true)).split('\n') %}
+              <span>{{ line | e if line else '&nbsp;' | safe }}</span>
+              {% endfor %}
+          </span>
       </div>
 
       <div class="details-grid">

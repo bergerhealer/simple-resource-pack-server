@@ -26,7 +26,7 @@ function authenticateJwt() {
   }).then(res => res.json())
     .then(data => {
       if (data.success) {
-        toggleAdminPopup();
+        togglePopupDialog('admin-popup');
         window.location.reload();
       } else {
         alert("Auth failed");

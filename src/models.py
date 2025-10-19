@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Optional
 
 
 class MinecraftVersionRange(BaseModel):
@@ -9,6 +10,7 @@ class MinecraftVersionRange(BaseModel):
 
 class PackMetadata(BaseModel):
     name: str
+    description: Optional[str] = None
     slug: str
     uploaded: datetime
     minecraft: MinecraftVersionRange

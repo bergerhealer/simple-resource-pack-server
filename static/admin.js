@@ -66,6 +66,17 @@ function patchUpdate(updatedJson, successCallback) {
       });
 }
 
+function replaceWithKeepStyle(element, replacement) {
+  const computed = getComputedStyle(element);
+  replacement.style.fontSize = computed.fontSize;
+  replacement.style.fontFamily = computed.fontFamily;
+  replacement.style.lineHeight = computed.lineHeight;
+  replacement.style.fontWeight = computed.fontWeight;
+  replacement.style.letterSpacing = computed.letterSpacing;
+
+  element.replaceWith(replacement);
+}
+
 function makeTitleEditable(h1) {
   const currentText = h1.textContent;
   const input = document.createElement("input");
@@ -87,6 +98,61 @@ function makeTitleEditable(h1) {
       revertH1.textContent = newText;
       revertH1.ondblclick = () => makeTitleEditable(revertH1);
       input.replaceWith(revertH1);
+    })
+  });
+}
+
+function extractDescriptionText(container) {
+  const lines = Array.from(container.querySelectorAll("span")).map(span => {
+    return span.innerHTML.trim() === "&nbsp;" ? "" : span.textContent;
+  });
+  return lines.join("\n");
+}
+
+function makeDescriptionEditable(span) {
+  const currentText = extractDescriptionText(span);
+  const textarea = document.createElement("textarea");
+  textarea.value = currentText;
+
+   // textarea.style.fontSize = "1.2em";
+  textarea.style.width = "100%";
+  textarea.style.boxSizing = "border-box";
+  textarea.style.overflow = "hidden";
+
+  // Resize function
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }
+
+  // Resize after insertion
+  setTimeout(() => autoResize(textarea), 0);
+
+  // Resize on input
+  textarea.addEventListener("input", () => autoResize(textarea));
+
+  // Trigger resize once on insert
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+
+  replaceWithKeepStyle(span, textarea);
+  textarea.focus();
+
+  textarea.addEventListener("blur", () => {
+    const newText = textarea.value.trim() || currentText;
+
+    patchUpdate({ description: newText }, () => {
+      const revertSpan = document.createElement("span");
+      revertSpan.className = "description-text";
+      revertSpan.ondblclick = () => makeDescriptionEditable(revertSpan);
+
+      for (const line of newText.split("\n")) {
+        const lineSpan = document.createElement("span");
+        lineSpan.textContent = line === "" ? "\u00A0" : line;
+        revertSpan.appendChild(lineSpan);
+      }
+
+      textarea.replaceWith(revertSpan);
     })
   });
 }
